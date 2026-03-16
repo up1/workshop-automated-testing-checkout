@@ -221,7 +221,7 @@ export default function CheckoutPage() {
         const data = await res.json();
 
         if (res.status === 201 && data.success) {
-          navigate("/confirmation");
+          navigate(`/confirmation/${data.data.orderId}`);
         } else if (res.status === 400) {
           if (data.errors) {
             setErrors(data.errors);

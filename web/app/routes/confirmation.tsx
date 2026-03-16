@@ -9,30 +9,57 @@ import {
   Download,
 } from "lucide-react";
 import { Link } from "react-router";
-import { useCart } from "~/hooks/useCart";
+import type { Route } from "./+types/confirmation";
 
-function parsePrice(price: string): number {
-  return parseFloat(price.replace(/[^0-9.]/g, ""));
+function formatPrice(amount: string): string {
+  return amount;
 }
 
-function formatPrice(amount: number): string {
-  return `$${amount.toFixed(2)}`;
+interface OrderItem {
+  productId: number;
+  title: string;
+  price: string;
+  quantity: number;
 }
 
-export default function ConfirmationPage() {
-  const { items } = useCart();
+interface OrderData {
+  orderId: number;
+  customer: {
+    fullName: string;
+    email: string;
+    phone: string;
+  };
+  shippingAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
+  items: OrderItem[];
+  subtotal: string;
+  shipping: string;
+  tax: string;
+  total: string;
+  status: string;
+  createdAt: string;
+}
 
-  const subtotal = items.reduce(
-    (sum, item) => sum + parsePrice(item.price) * item.quantity,
-    0
-  );
-  const discount = subtotal * 0.15;
-  const shipping = items.length > 0 ? 12.0 : 0;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax - discount;
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+export async function loader({ params }: Route.LoaderArgs) {
+  const apiHostname = process.env.API_HOSTNAME || "http://localhost:3001";
+  const response = await fetch(`${apiHostname}/api/order/${params.orderId}`);
+  const result = await response.json();
 
-  const orderNumber = `#ORD-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  if (!result.success) {
+    throw new Response(result.message || "Order not found", { status: response.status });
+  }
+
+  return { order: result.data as OrderData };
+}
+
+export default function ConfirmationPage({ loaderData }: Route.ComponentProps) {
+  const { order } = loaderData;
+
+  const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
 
   const today = new Date();
   const deliveryStart = new Date(today);
@@ -107,7 +134,7 @@ export default function ConfirmationPage() {
                 Order Number
               </span>
               <span className="font-heading text-[16px] font-semibold text-[var(--color-primary)]">
-                {orderNumber}
+                #ORD-{order.orderId}
               </span>
             </div>
             <div className="flex flex-col items-center gap-1 flex-1 py-5 px-6 border-x border-[var(--color-border)]">
@@ -123,7 +150,7 @@ export default function ConfirmationPage() {
                 Total Paid
               </span>
               <span className="font-heading text-[16px] font-semibold text-[var(--color-primary)]">
-                {formatPrice(total)}
+                {formatPrice(order.total)}
               </span>
             </div>
           </div>
@@ -137,16 +164,13 @@ export default function ConfirmationPage() {
               </span>
               <hr className="border-[var(--color-border)]" />
               <span className="font-body text-[14px] font-medium text-[var(--color-primary)]">
-                John Doe
+                {order.customer.fullName}
               </span>
               <span className="font-body text-[13px] text-[var(--color-secondary)] leading-[1.5]">
-                123 Main Street, Apt 4B
+                {order.shippingAddress.street}
               </span>
               <span className="font-body text-[13px] text-[var(--color-secondary)]">
-                New York, NY 10001
-              </span>
-              <span className="font-body text-[13px] text-[var(--color-secondary)]">
-                United States
+                {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zip}
               </span>
             </div>
 
@@ -170,7 +194,7 @@ export default function ConfirmationPage() {
               <div className="flex items-center gap-[6px] bg-[#FEF2F2] px-[14px] py-[10px]">
                 <Tag className="w-[14px] h-[14px] text-[var(--color-accent)]" />
                 <span className="font-body text-[13px] font-medium text-[var(--color-accent)]">
-                  Saved {formatPrice(discount)} with SUMMER2024
+                  Order {order.status}
                 </span>
               </div>
             </div>
@@ -182,30 +206,23 @@ export default function ConfirmationPage() {
               Items Ordered ({totalItems})
             </span>
             <hr className="border-[var(--color-border)]" />
-            {items.map((item) => (
+            {order.items.map((item) => (
               <div
-                key={item.title}
+                key={item.productId}
                 className="flex items-center gap-3"
               >
                 <div className="w-12 h-12 bg-[#F5F5F5] shrink-0 overflow-hidden">
-                  {item.image && (
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
                 </div>
                 <div className="flex flex-col gap-[2px] flex-1">
                   <span className="font-body text-[13px] font-medium text-[var(--color-primary)]">
                     {item.title}
                   </span>
                   <span className="font-body text-[12px] text-[var(--color-secondary)]">
-                    Qty: {item.quantity} · {item.category}
+                    Qty: {item.quantity}
                   </span>
                 </div>
                 <span className="font-heading text-[14px] font-medium text-[var(--color-primary)]">
-                  {formatPrice(parsePrice(item.price) * item.quantity)}
+                  {item.price}
                 </span>
               </div>
             ))}
@@ -215,7 +232,7 @@ export default function ConfirmationPage() {
           <div className="flex items-center justify-center gap-2 w-full bg-[#F5F5F5] px-5 py-4">
             <Mail className="w-4 h-4 text-[var(--color-secondary)]" />
             <span className="font-body text-[13px] text-[var(--color-secondary)]">
-              A confirmation email has been sent to john.doe@email.com
+              A confirmation email has been sent to {order.customer.email}
             </span>
           </div>
 
