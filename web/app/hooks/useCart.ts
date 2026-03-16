@@ -72,7 +72,12 @@ export function useCart() {
     });
   }, []);
 
+  const clearCart = useCallback(() => {
+    setItems([]);
+    writeCart([]);
+  }, []);
+
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  return { items, addToCart, removeFromCart, updateQuantity, totalItems };
+  return { items, addToCart, removeFromCart, updateQuantity, clearCart, totalItems };
 }

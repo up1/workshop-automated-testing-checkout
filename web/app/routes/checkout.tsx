@@ -157,7 +157,7 @@ function validate(form: FormData): Partial<Record<keyof FormData, string>> {
 }
 
 export default function CheckoutPage() {
-  const { items } = useCart();
+  const { items, clearCart } = useCart();
   const navigate = useNavigate();
   const [form, setForm] = useState<FormData>(initialForm);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
@@ -221,6 +221,7 @@ export default function CheckoutPage() {
         const data = await res.json();
 
         if (res.status === 201 && data.success) {
+          clearCart();
           navigate(`/confirmation/${data.data.orderId}`);
         } else if (res.status === 400) {
           if (data.errors) {
