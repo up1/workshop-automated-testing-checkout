@@ -15,9 +15,19 @@
 
 ```bash
 npm install
+node scripts/initial.js
 npm test
 npm start
 ```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm install` | Install dependencies |
+| `node scripts/initial.js` | Clear and seed database with 12 products |
+| `npm test` | Run tests with Jest |
+| `npm start` | Start server on port 3001 |
 
 ## curl Examples
 
