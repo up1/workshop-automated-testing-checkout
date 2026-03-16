@@ -183,13 +183,58 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleSubmit = () => {
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
     setSubmitted(true);
+    setApiError(null);
     const validationErrors = validate(form);
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
-      navigate("/confirmation");
+      setLoading(true);
+      try {
+        const apiHostname = "http://localhost:3001";
+        const res = await fetch(`${apiHostname}/api/checkout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customer: {
+              fullName: form.fullName,
+              email: form.email,
+              phone: form.phone,
+            },
+            shippingAddress: {
+              street: form.street,
+              city: form.city,
+              state: form.state,
+              zip: form.zip,
+            },
+            items: items.map((item) => ({
+              productId: item.id,
+              quantity: item.quantity,
+            })),
+          }),
+        });
+
+        const data = await res.json();
+
+        if (res.status === 201 && data.success) {
+          navigate("/confirmation");
+        } else if (res.status === 400) {
+          if (data.errors) {
+            setErrors(data.errors);
+          }
+          setApiError(data.message || "Validation failed");
+        } else {
+          setApiError(data.message || "Internal Server Error");
+        }
+      } catch {
+        setApiError("Unable to connect to server");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -420,14 +465,24 @@ export default function CheckoutPage() {
             />
           </section>
 
+          {/* API Error */}
+          {apiError && (
+            <div className="flex items-center gap-2 p-3 border border-[var(--color-accent)] bg-[#FEF2F1]">
+              <span className="font-body text-[13px] text-[var(--color-accent)]">
+                {apiError}
+              </span>
+            </div>
+          )}
+
           {/* Complete Order Button */}
           <button
             onClick={handleSubmit}
-            className="flex items-center justify-center gap-2 h-[52px] w-full bg-[var(--color-accent)]"
+            disabled={loading}
+            className="flex items-center justify-center gap-2 h-[52px] w-full bg-[var(--color-accent)] disabled:opacity-50"
           >
             <Lock className="w-4 h-4 text-white" />
             <span className="font-heading text-[14px] font-medium text-white">
-              Complete Order
+              {loading ? "Processing..." : "Complete Order"}
             </span>
           </button>
         </div>

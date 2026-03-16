@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 export interface CartItem {
+  id: number;
   title: string;
   price: string;
   image: string;
@@ -32,13 +33,13 @@ export function useCart() {
   }, []);
 
   const addToCart = useCallback(
-    (product: { title: string; price: string; image: string; category: string }) => {
+    (product: { id: number; title: string; price: string; image: string; category: string }) => {
       setItems((prev) => {
-        const existing = prev.find((item) => item.title === product.title);
+        const existing = prev.find((item) => item.id === product.id);
         let next: CartItem[];
         if (existing) {
           next = prev.map((item) =>
-            item.title === product.title
+            item.id === product.id
               ? { ...item, quantity: item.quantity + 1 }
               : item
           );

@@ -16,12 +16,31 @@ A modern, production-ready template for building full-stack React applications u
 
 ## Getting Started
 
+### Prerequisites
+
+Start the API server first (from the `api/` folder):
+
+```bash
+cd api
+npm install
+node scripts/initial.js
+npm start
+```
+
 ### Installation
 
 Install the dependencies:
 
 ```bash
 npm install
+```
+
+### Environment Variables
+
+Create a `.env` file (already included):
+
+```
+API_HOSTNAME=http://localhost:3001
 ```
 
 ### Development

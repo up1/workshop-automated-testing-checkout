@@ -75,3 +75,150 @@ curl "http://localhost:3001/api/product?page=2&limit=10"
   "message": "Internal Server Error"
 }
 ```
+
+---
+
+## Checkout
+
+**Endpoint:** `POST /api/checkout`
+
+## curl Examples
+
+Create an order:
+```bash
+curl -X POST http://localhost:3001/api/checkout \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer": {
+      "fullName": "John Doe",
+      "email": "john@example.com",
+      "phone": "0812345678"
+    },
+    "shippingAddress": {
+      "street": "123 Main St",
+      "city": "Bangkok",
+      "state": "BKK",
+      "zip": "10110"
+    },
+    "items": [
+      { "productId": 1, "quantity": 2 },
+      { "productId": 5, "quantity": 1 }
+    ]
+  }'
+```
+
+## Response
+
+**Success (201):**
+```json
+{
+  "success": true,
+  "data": {
+    "orderId": 1,
+    "customer": {
+      "fullName": "John Doe",
+      "email": "john@example.com",
+      "phone": "0812345678"
+    },
+    "shippingAddress": {
+      "street": "123 Main St",
+      "city": "Bangkok",
+      "state": "BKK",
+      "zip": "10110"
+    },
+    "items": [
+      { "productId": 1, "title": "Wireless Headphones Pro", "price": "$249.99", "quantity": 2 },
+      { "productId": 5, "title": "Running Shoes Air Max", "price": "$129.00", "quantity": 1 }
+    ],
+    "subtotal": "$628.98",
+    "shipping": "$12.00",
+    "tax": "$50.32",
+    "total": "$691.30",
+    "status": "confirmed",
+    "createdAt": "2026-03-16T10:30:00.000Z"
+  }
+}
+```
+
+**Validation Error (400):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "fullName": "Full name is required",
+    "email": "Enter a valid email address",
+    "street": "Street address is required"
+  }
+}
+```
+
+**Error (500):**
+```json
+{
+  "success": false,
+  "message": "Internal Server Error"
+}
+```
+
+---
+
+## Get Order Detail
+
+**Endpoint:** `GET /api/order/:orderId`
+
+## curl Examples
+
+Get order by ID:
+```bash
+curl http://localhost:3001/api/order/1
+```
+
+## Response
+
+**Success (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "orderId": 1,
+    "customer": {
+      "fullName": "John Doe",
+      "email": "john@example.com",
+      "phone": "0812345678"
+    },
+    "shippingAddress": {
+      "street": "123 Main St",
+      "city": "Bangkok",
+      "state": "BKK",
+      "zip": "10110"
+    },
+    "items": [
+      { "productId": 1, "title": "Wireless Headphones Pro", "price": "$249.99", "quantity": 2 },
+      { "productId": 5, "title": "Running Shoes Air Max", "price": "$129.00", "quantity": 1 }
+    ],
+    "subtotal": "$628.98",
+    "shipping": "$12.00",
+    "tax": "$50.32",
+    "total": "$691.30",
+    "status": "confirmed",
+    "createdAt": "2026-03-16T10:30:00.000Z"
+  }
+}
+```
+
+**Not Found (404):**
+```json
+{
+  "success": false,
+  "message": "Order not found"
+}
+```
+
+**Error (500):**
+```json
+{
+  "success": false,
+  "message": "Internal Server Error"
+}
+```

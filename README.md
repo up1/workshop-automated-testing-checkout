@@ -29,7 +29,7 @@
 ``` 
 $cd web
 $npm install
-$npm run dev    
+$API_HOSTNAME=http://localhost:3001 npm run dev
 ```
 
 ## Run Backend

@@ -4,6 +4,8 @@ const path = require("path");
 const db = new Database(path.join(__dirname, "..", "database.sqlite"));
 db.pragma("journal_mode = WAL");
 
+db.exec("DROP TABLE IF EXISTS order_items");
+db.exec("DROP TABLE IF EXISTS orders");
 db.exec("DROP TABLE IF EXISTS products");
 
 db.exec(`
@@ -118,5 +120,39 @@ insertMany(products);
 
 const count = db.prepare("SELECT COUNT(*) as count FROM products").get();
 console.log(`Database initialized: ${count.count} products inserted`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fullName TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    street TEXT NOT NULL,
+    city TEXT NOT NULL,
+    state TEXT NOT NULL,
+    zip TEXT NOT NULL,
+    subtotal TEXT NOT NULL,
+    shipping TEXT NOT NULL,
+    tax TEXT NOT NULL,
+    total TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'confirmed',
+    createdAt TEXT NOT NULL
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS order_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    orderId INTEGER NOT NULL,
+    productId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    price TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    FOREIGN KEY (orderId) REFERENCES orders(id),
+    FOREIGN KEY (productId) REFERENCES products(id)
+  )
+`);
+
+console.log("Orders tables created");
 
 db.close();
