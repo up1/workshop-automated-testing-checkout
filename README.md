@@ -22,3 +22,21 @@
    * /checkout
 5. User receives an order summary with the details of the purchase.
    * /confirmation
+
+
+
+## Run Frontend
+``` 
+$cd web
+$npm install
+$npm run dev    
+```
+
+## Run Backend
+```
+$cd api
+$npm install
+$node scripts/initial.js
+$npm test
+$npm start
+```

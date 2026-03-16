@@ -7,108 +7,27 @@ import {
   ChevronRight,
   Star,
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLoaderData } from "react-router";
 import { ProductCard } from "~/components/ProductCard";
 import { useCart } from "~/hooks/useCart";
+import type { Route } from "./+types/product";
 
-const products = [
-  {
-    image:
-      "https://images.unsplash.com/photo-1739764575613-ecc078ed173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Electronics",
-    title: "Wireless Headphones Pro",
-    description: "Premium noise-cancelling over-ear headphones",
-    price: "$249.99",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1729980635252-35c2e0ae5414?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Clothing",
-    title: "Classic Denim Jacket",
-    description: "Timeless washed denim with modern fit",
-    price: "$89.00",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1761083042195-9e0e85189e2e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Home & Garden",
-    title: "Ceramic Plant Pot Set",
-    description: "Set of 3 minimalist ceramic planters",
-    price: "$45.00",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1626194062394-022cc80f6d2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Electronics",
-    title: "Smart Watch Ultra",
-    description: "Advanced fitness tracking & notifications",
-    price: "$399.00",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1724921196547-08aee1bab2da?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Sports",
-    title: "Running Shoes Air Max",
-    description: "Lightweight breathable mesh running shoes",
-    price: "$129.00",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1759266339551-2ed0a89a4b93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Books",
-    title: "Design Patterns Handbook",
-    description: "Essential guide to modern software design",
-    price: "$34.99",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1703243030062-58deb1b82367?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Toys",
-    title: "Building Blocks 500pc",
-    description: "Creative construction set for ages 6+",
-    price: "$59.99",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1676524246728-bda8b4c0548a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Clothing",
-    title: "Merino Wool Sweater",
-    description: "Soft premium merino wool crew neck",
-    price: "$120.00",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1649230955954-108845001397?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Home & Garden",
-    title: "LED Desk Lamp",
-    description: "Adjustable brightness with USB charging port",
-    price: "$67.00",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1594501432907-91214bfdd928?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Electronics",
-    title: "Bluetooth Speaker Mini",
-    description: "Portable waterproof speaker with 12h battery",
-    price: "$79.99",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1754738381783-f9a2847bfef2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Sports",
-    title: "Yoga Mat Premium",
-    description: "Non-slip eco-friendly exercise mat 6mm",
-    price: "$42.00",
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1719429873442-e894bc0ca520?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    category: "Books",
-    title: "Creative Coding Guide",
-    description: "Learn to code through art and design",
-    price: "$29.99",
-  },
-];
+interface Product {
+  id: number;
+  image: string;
+  category: string;
+  title: string;
+  description: string;
+  price: string;
+}
+
+export async function loader() {
+  const apiHostname = process.env.API_HOSTNAME || "http://localhost:3001";
+  const response = await fetch(`${apiHostname}/api/product?page=1&limit=8`);
+  const result = await response.json();
+  const products: Product[] = result.data;
+  return { products };
+}
 
 const categories = [
   "Electronics",
@@ -171,7 +90,8 @@ function PaginationButton({
   );
 }
 
-export default function ProductPage() {
+export default function ProductPage({ loaderData }: Route.ComponentProps) {
+  const { products } = loaderData;
   const { addToCart, totalItems } = useCart();
 
   return (
@@ -331,7 +251,7 @@ export default function ProductPage() {
                 Product Catalog
               </h1>
               <p className="font-body text-[14px] text-[var(--color-secondary)]">
-                Showing 1–12 of 86 products
+                Showing {products.length} products
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -349,7 +269,7 @@ export default function ProductPage() {
 
           {/* Product Grid */}
           <div className="flex flex-col gap-6">
-            {[0, 1, 2].map((row) => (
+            {Array.from({ length: Math.ceil(products.length / 4) }).map((_, row) => (
               <div key={row} className="flex gap-6">
                 {products.slice(row * 4, row * 4 + 4).map((product) => (
                   <ProductCard
