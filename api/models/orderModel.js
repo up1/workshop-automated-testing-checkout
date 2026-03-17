@@ -92,7 +92,9 @@ function createOrder(customer, shippingAddress, items) {
     VALUES (@orderId, @productId, @title, @price, @quantity)
   `);
 
-  const result = db.transaction(() => {
+  db.exec("BEGIN");
+  let result;
+  try {
     const info = insertOrder.run({
       fullName: customer.fullName,
       email: customer.email,
@@ -115,7 +117,7 @@ function createOrder(customer, shippingAddress, items) {
       insertItem.run({ orderId, ...item });
     }
 
-    return {
+    result = {
       orderId: Number(orderId),
       customer,
       shippingAddress,
@@ -127,7 +129,11 @@ function createOrder(customer, shippingAddress, items) {
       status: "confirmed",
       createdAt,
     };
-  })();
+    db.exec("COMMIT");
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
+  }
 
   return { data: result };
 }

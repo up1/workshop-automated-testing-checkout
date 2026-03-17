@@ -1,8 +1,8 @@
-const Database = require("better-sqlite3");
+const { DatabaseSync } = require("node:sqlite");
 const path = require("path");
 
-const db = new Database(path.join(__dirname, "..", "database.sqlite"));
-db.pragma("journal_mode = WAL");
+const db = new DatabaseSync(path.join(__dirname, "..", "database.sqlite"));
+db.exec("PRAGMA journal_mode = WAL");
 
 db.exec("DROP TABLE IF EXISTS order_items");
 db.exec("DROP TABLE IF EXISTS orders");
@@ -110,13 +110,16 @@ const insert = db.prepare(
   "INSERT INTO products (image, category, title, description, price) VALUES (@image, @category, @title, @description, @price)"
 );
 
-const insertMany = db.transaction((items) => {
-  for (const item of items) {
+db.exec("BEGIN");
+try {
+  for (const item of products) {
     insert.run(item);
   }
-});
-
-insertMany(products);
+  db.exec("COMMIT");
+} catch (e) {
+  db.exec("ROLLBACK");
+  throw e;
+}
 
 const count = db.prepare("SELECT COUNT(*) as count FROM products").get();
 console.log(`Database initialized: ${count.count} products inserted`);

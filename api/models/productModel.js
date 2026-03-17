@@ -1,12 +1,12 @@
-const Database = require("better-sqlite3");
+const { DatabaseSync } = require("node:sqlite");
 const path = require("path");
 
 let db;
 
 function getDb() {
   if (!db) {
-    db = new Database(path.join(__dirname, "..", "database.sqlite"));
-    db.pragma("journal_mode = WAL");
+    db = new DatabaseSync(path.join(__dirname, "..", "database.sqlite"));
+    db.exec("PRAGMA journal_mode = WAL");
     initDb();
   }
   return db;
@@ -122,13 +122,16 @@ function seedProducts() {
     "INSERT INTO products (image, category, title, description, price) VALUES (@image, @category, @title, @description, @price)"
   );
 
-  const insertMany = db.transaction((items) => {
-    for (const item of items) {
+  db.exec("BEGIN");
+  try {
+    for (const item of products) {
       insert.run(item);
     }
-  });
-
-  insertMany(products);
+    db.exec("COMMIT");
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
+  }
 }
 
 function getAllProducts(page = 1, limit = 10) {
